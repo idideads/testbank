@@ -83,7 +83,7 @@ func TestTransferTx(t *testing.T) {
 		diff2 := toAccount.Blance - account2.Blance
 		require.Equal(t, diff1, diff2)
 		require.True(t, diff1 > 0)
-		require.True(t, diff1 % amount == 0)
+		require.True(t, diff1%amount == 0)
 
 		k := int(diff1 / amount)
 		require.True(t, k >= 1 && k <= n)
@@ -102,5 +102,53 @@ func TestTransferTx(t *testing.T) {
 
 	require.Equal(t, account1.Blance-int64(n)*amount, updateAccount1.Blance)
 	require.Equal(t, account2.Blance+int64(n)*amount, updateAccount2.Blance)
+
+}
+
+func TestTransferTxDeadLock(t *testing.T) {
+	store := NewStore(testDb)
+
+	account1 := createFakeAccount(t)
+	account2 := createFakeAccount(t)
+
+	n := 10
+	amount := int64(10)
+
+	errs := make(chan error)
+
+	for i := 0; i < n; i++ {
+		fromAccount := account1
+		toAccount := account2
+
+		if i % 2 == 1 {
+			fromAccount = account2
+			toAccount = account1
+		}
+		go func() {
+			_, err := store.TransferTx(context.Background(), TransferTxParm{
+				FromAccountId: fromAccount.ID,
+				ToAccountId:   toAccount.ID,
+				Amount:        amount,
+			})
+
+			errs <- err
+		}()
+	}
+
+	for i := 0; i < n; i++ {
+		err := <-errs
+		require.NoError(t, err)
+	}
+
+	updateAccount1, err := store.GetAccount(context.Background(), account1.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, updateAccount1)
+
+	updateAccount2, err := store.GetAccount(context.Background(), account2.ID)
+	require.NoError(t, err)
+	require.NotEmpty(t, updateAccount2)
+
+	require.Equal(t, account1.Blance, updateAccount1.Blance)
+	require.Equal(t, account2.Blance, updateAccount2.Blance)
 
 }

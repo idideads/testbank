@@ -86,36 +86,52 @@ func (store *Store) TransferTx(ctx context.Context, arg TransferTxParm) (Transfe
 			return err
 		}
 
-		// TODO: update Account
-		// account1, err := q.GetAccountForUpdate(ctx, arg.FromAccountId)
+		// transferResult.FromAccount, err = q.AddAccountBlance(ctx, AddAccountBlanceParams{
+		// 	ID:     arg.FromAccountId,
+		// 	Blance: -arg.Amount,
+		// })
 		// if err != nil {
 		// 	return err
 		// }
 
-		transferResult.FromAccount, err = q.AddAccountBlance(ctx, AddAccountBlanceParams{
-			ID: arg.FromAccountId,
-			Blance: - arg.Amount,
-		})
-		if err != nil {
-			return err
-		}
-
-		// account2, err := q.GetAccountForUpdate(ctx, arg.ToAccountId)
+		// transferResult.ToAccount, err = q.AddAccountBlance(ctx, AddAccountBlanceParams{
+		// 	ID:     arg.ToAccountId,
+		// 	Blance: arg.Amount,
+		// })
 		// if err != nil {
 		// 	return err
 		// }
 
-		transferResult.ToAccount, err = q.AddAccountBlance(ctx, AddAccountBlanceParams{
-			ID: arg.ToAccountId,
-			Blance: arg.Amount,
-		})
-		if err != nil {
-			return err
+		if arg.ToAccountId > arg.FromAccountId {
+			transferResult.FromAccount, transferResult.ToAccount, err = addMoney(ctx, q, arg.FromAccountId, -arg.Amount, arg.ToAccountId, arg.Amount)
+		} else {
+			transferResult.ToAccount, transferResult.FromAccount, err = addMoney(ctx, q, arg.ToAccountId, arg.Amount, arg.FromAccountId, -arg.Amount)
 		}
-
 
 		return err
 	})
 
 	return transferResult, err
 }
+
+func addMoney(
+	ctx context.Context,
+	q *Queries,
+	accountID1 int64,
+	amount1 int64,
+	accountID2 int64,
+	amount2 int64,
+) (account1, account2 Account, err error) {
+	account1, err = q.AddAccountBlance(ctx, AddAccountBlanceParams{ID: accountID1, Blance:  amount1})
+	if err != nil {
+		return
+	}
+
+	account2, err = q.AddAccountBlance(ctx, AddAccountBlanceParams{ID: accountID2, Blance:  amount2})
+	if err != nil {
+		return
+	}
+
+	return
+}
+
