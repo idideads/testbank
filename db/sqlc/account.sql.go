@@ -7,6 +7,31 @@ import (
 	"context"
 )
 
+const addAccountBlance = `-- name: AddAccountBlance :one
+Update accounts 
+SET blance = blance + $1
+WHERE id = $2
+RETURNING id, owner, blance, currency, created_at
+`
+
+type AddAccountBlanceParams struct {
+	Blance int64 `json:"blance"`
+	ID     int64 `json:"id"`
+}
+
+func (q *Queries) AddAccountBlance(ctx context.Context, arg AddAccountBlanceParams) (Account, error) {
+	row := q.db.QueryRowContext(ctx, addAccountBlance, arg.Blance, arg.ID)
+	var i Account
+	err := row.Scan(
+		&i.ID,
+		&i.Owner,
+		&i.Blance,
+		&i.Currency,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const createAccount = `-- name: CreateAccount :one
 INSERT INTO accounts (
     owner,  blance, currency

@@ -27,6 +27,12 @@ SET blance = $2
 WHERE id = $1
 RETURNING *;
 
+-- name: AddAccountBlance :one
+Update accounts 
+SET blance = blance + sqlc.arg(blance)
+WHERE id = sqlc.arg(id)
+RETURNING *;
+
 
 -- name: DeleteAccount :exec
 DELETE FROM accounts
