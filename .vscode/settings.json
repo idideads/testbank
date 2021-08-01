@@ -1,0 +1,14 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "dbserver",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "dbserver",
+            "database": "simple_bank",
+            "username": "root",
+            "password": "123456"
+        }
+    ]
+}
