@@ -1,6 +1,9 @@
 migrateup:
 	migrate -path db/migration -database "postgresql://root:123456@dbserver:5432/simple_bank?sslmode=disable" -verbose up
 
+migrateupAction:
+	migrate -path db/migration -database "postgresql://root:secret@localhost:5432/simple_bank?sslmode=disable" -verbose up
+
 migratedown:
 	migrate -path db/migration -database "postgresql://root:123456@dbserver:5432/simple_bank?sslmode=disable" -verbose down
 
@@ -13,4 +16,4 @@ sqlc:
 test:
 	go test -v -cover ./...
 
-.PHONY:	migrateup migratedown migratecreate sqlc test
+.PHONY:	migrateup migratedown migratecreate sqlc test migrateupAction
